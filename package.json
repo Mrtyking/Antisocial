@@ -1,0 +1,24 @@
+{
+  "name": "antisocial-ticket-bot",
+  "version": "1.0.0",
+  "description": "Discord Ticket Bot for AntiSocial with Components V2 Embeds",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "keywords": [
+    "discord",
+    "ticket",
+    "bot",
+    "antisocial",
+    "components-v2"
+  ],
+  "author": "AntiSocial",
+  "license": "ISC",
+  "dependencies": {
+    "discord-html-transcripts": "^3.2.0",
+    "discord.js": "^14.27.0",
+    "dotenv": "^16.4.7"
+  }
+}

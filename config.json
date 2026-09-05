@@ -1,0 +1,224 @@
+{
+  "panel": {
+    "title": "POSTULACION A ANTISOCIAL",
+    "subtitle": "Panel de Tickets Antisocial",
+    "accentColor": 15550277,
+    "quote": "Haz clic en cualquier opción abajo para crear un ticket y comenzar con AntiSocial.",
+    "instructions": [
+      "Elige la opción que se ajuste a tus necesidades en los botones o menú de abajo.",
+      "Completa los detalles requeridos en caso de abrirse formulario.",
+      "Envía tu ticket y continúa la atención directa con nuestro equipo."
+    ],
+    "footer": "© AntiSocial - ESTO ES ANTISOCIAL UNA SOLA FAMILIA"
+  },
+  "categories": {
+    "postular": {
+      "id": "postular",
+      "label": "Postular",
+      "fullName": "Postular",
+      "description": "Postúlate para el equipo AntiSocial.",
+      "emoji": "<:icons8population64:1545620847354449981>",
+      "emojiId": "1545620847354449981",
+      "emojiName": "icons8population64",
+      "buttonStyle": "Secondary",
+      "prefix": "postular",
+      "parentCategoryId": "1545633044793393244",
+      "useDmFlow": true,
+      "questions": [
+        "¿Cuál es tu nombre/alias?",
+        "¿Cuántos años tienes?",
+        "¿De qué país eres?",
+        "¿Cómo conociste nuestro Discord?",
+        "¿Cuánto tiempo llevas jugando FiveM?",
+        "¿Qué tipo de PvP te gusta más?",
+        "¿Qué experiencia tienes en comunidades de FiveM?",
+        "¿Sueles jugar PvP competitivo o simplemente por diversión?",
+        "¿Qué buscas encontrar en nuestra comunidad?",
+        "¿Qué puedes aportar a la comunidad?",
+        "¿Sueles participar activamente en Discord?",
+        "¿Tienes micrófono?"
+      ]
+    },
+    "partner": {
+      "id": "partner",
+      "label": "Partner",
+      "fullName": "Partner",
+      "description": "Alianzas y colaboraciones oficiales.",
+      "emoji": "<:icons8partnership60:1545620823673536545>",
+      "emojiId": "1545620823673536545",
+      "emojiName": "icons8partnership60",
+      "buttonStyle": "Secondary",
+      "prefix": "partner",
+      "parentCategoryId": "1545633428861362288",
+      "requireModal": true,
+      "modalTitle": "Propuesta de Partner",
+      "questions": [
+        {
+          "id": "comunidad",
+          "label": "¿Nombre y enlace de tu comunidad o canal?",
+          "placeholder": "Enlace o nombre de servidor / canal...",
+          "style": "Short",
+          "required": true
+        },
+        {
+          "id": "propuesta",
+          "label": "¿Qué propuesta o colaboración ofreces?",
+          "placeholder": "Detalla la propuesta de colaboración...",
+          "style": "Paragraph",
+          "required": true
+        }
+      ]
+    },
+    "preguntas": {
+      "id": "preguntas",
+      "label": "Preguntas",
+      "fullName": "Preguntas",
+      "description": "Dudas sobre normas, sistemas o eventos.",
+      "emoji": "<:icons8question48:1545620788999225395>",
+      "emojiId": "1545620788999225395",
+      "emojiName": "icons8question48",
+      "buttonStyle": "Secondary",
+      "prefix": "dudas",
+      "parentCategoryId": "1545632501505196143",
+      "requireModal": true,
+      "modalTitle": "Duda o Consulta General",
+      "questions": [
+        {
+          "id": "consulta",
+          "label": "¿Cuál es tu pregunta o duda?",
+          "placeholder": "Escribe tu duda detalladamente...",
+          "style": "Paragraph",
+          "required": true
+        }
+      ]
+    },
+    "wager": {
+      "id": "wager",
+      "label": "Wager",
+      "fullName": "Wager",
+      "description": "Apuestas y partidas competitivas.",
+      "emoji": "<:icons8moneyline78:1545620750830927902>",
+      "emojiId": "1545620750830927902",
+      "emojiName": "icons8moneyline78",
+      "buttonStyle": "Secondary",
+      "prefix": "wager",
+      "parentCategoryId": "1545633198887804939",
+      "requireModal": true,
+      "modalTitle": "Desafío Wager",
+      "questions": [
+        {
+          "id": "modalidad",
+          "label": "¿Modalidad o juego del wager?",
+          "placeholder": "Ej: 5v5, 2v2, GTA, etc.",
+          "style": "Short",
+          "required": true
+        },
+        {
+          "id": "detalles",
+          "label": "Detalles del reto o apuesta",
+          "placeholder": "Horario propuesto, reglas, etc.",
+          "style": "Paragraph",
+          "required": true
+        }
+      ]
+    },
+    "comprar": {
+      "id": "comprar",
+      "label": "Compra",
+      "fullName": "Compra",
+      "description": "Compras, donaciones e información de tienda.",
+      "emoji": "<:icons8shop64:1545620725476368424>",
+      "emojiId": "1545620725476368424",
+      "emojiName": "icons8shop64",
+      "buttonStyle": "Secondary",
+      "prefix": "compra",
+      "parentCategoryId": "1545632773090443294",
+      "requireModal": true,
+      "modalTitle": "Consulta de Compra",
+      "questions": [
+        {
+          "id": "producto",
+          "label": "¿Qué producto o beneficio deseas adquirir?",
+          "placeholder": "Ej: Rango VIP, Booster, Producto de tienda...",
+          "style": "Short",
+          "required": true
+        },
+        {
+          "id": "metodo_pago",
+          "label": "¿Método de pago preferido?",
+          "placeholder": "PayPal, Cripto, Tarjeta, etc.",
+          "style": "Short",
+          "required": false
+        }
+      ]
+    },
+    "soporte": {
+      "id": "soporte",
+      "label": "Soporte",
+      "fullName": "Soporte",
+      "description": "Dudas, asistencia o problemas técnicos.",
+      "emoji": "<:icons8support48:1545620701199728671>",
+      "emojiId": "1545620701199728671",
+      "emojiName": "icons8support48",
+      "buttonStyle": "Secondary",
+      "prefix": "soporte",
+      "parentCategoryId": "1545633759116664832",
+      "requireModal": true,
+      "modalTitle": "Ticket de Soporte",
+      "questions": [
+        {
+          "id": "problema",
+          "label": "¿Cuál es el problema que presentas?",
+          "placeholder": "Describe con detalle lo que te sucede...",
+          "style": "Paragraph",
+          "required": true
+        }
+      ]
+    },
+    "reportes": {
+      "id": "reportes",
+      "label": "Reportar",
+      "fullName": "Reportar",
+      "description": "Reporta mal comportamiento o faltas.",
+      "emoji": "<:icons8report64:1545620671378231347>",
+      "emojiId": "1545620671378231347",
+      "emojiName": "icons8report64",
+      "buttonStyle": "Secondary",
+      "prefix": "reporte",
+      "parentCategoryId": "1545634257999765515",
+      "requireModal": true,
+      "modalTitle": "Reporte de Usuario",
+      "questions": [
+        {
+          "id": "usuario_reportado",
+          "label": "¿A qué usuario o ID deseas reportar?",
+          "placeholder": "Nombre o ID de usuario",
+          "style": "Short",
+          "required": true
+        },
+        {
+          "id": "motivo_pruebas",
+          "label": "¿Motivo y pruebas disponibles?",
+          "placeholder": "Explica lo ocurrido y menciona si tienes capturas/clips...",
+          "style": "Paragraph",
+          "required": true
+        }
+      ]
+    }
+  },
+  "ticketSettings": {
+    "categoryName": "TICKETS ANTISOCIAL",
+    "parentCategoryId": "",
+    "staffRoleId": "1386921860360437831",
+    "logsChannelId": "1379662712841306243",
+    "maxTicketsPerUser": 1,
+    "deleteCountdownSeconds": 5,
+    "staffMentionMax": 3,
+    "staffMentionIntervalMinutes": 30
+  },
+  "botPresence": {
+    "status": "online",
+    "activityText": "https://discord.gg/antisociall",
+    "activityType": "Custom"
+  }
+}
