@@ -180,6 +180,12 @@ class TicketService {
       ticketData.panelMessageId = controlMsg.id;
       StorageService.saveTicket(ticketChannel.id, ticketData);
 
+      // Notificar al creador del ticket y al staff
+      const staffMention = config.ticketSettings.staffRoleId ? `<@&${config.ticketSettings.staffRoleId}> ` : '';
+      await ticketChannel.send({
+        content: `${staffMention}👋 ¡Hola <@${user.id}>! Tu ticket ha sido creado.`
+      });
+
       // Responder al usuario
       const replyContent = `Tu ticket ha sido creado con éxito en <#${ticketChannel.id}>.`;
       if (interaction.replied || interaction.deferred) {

@@ -68,7 +68,6 @@ function buildTicketGreetingPayload(ticket, modalAnswers = null) {
     .addTextDisplayComponents(footerText);
 
   return {
-    content: `<@${ticket.userId}>`,
     flags: [MessageFlags.IsComponentsV2],
     components: [container]
   };
