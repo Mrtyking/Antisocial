@@ -8,7 +8,10 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  MessageFlags
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder
 } = require('discord.js');
 const discordTranscripts = require('discord-html-transcripts');
 const config = require('../config');
@@ -574,24 +577,60 @@ class TicketService {
       }
     }
 
-    // Intentar enviar transcripción al usuario por DM
-    if (ticket && transcriptAttachment) {
+    // Intentar enviar transcripción y notificación al usuario por DM con Components V2
+    if (ticket) {
       try {
         const user = await interaction.client.users.fetch(ticket.userId);
         if (user) {
-          const dmEmbed = new EmbedBuilder()
-            .setTitle(`Tu ticket en AntiSocial ha sido cerrado`)
-            .setDescription(`Tu ticket **#${ticket.ticketNumber}** (${channel.name}) fue cerrado por <@${interaction.user.id}>.\nAdjuntamos la transcripción de la conversación.`)
-            .setColor(config.panel.accentColor || 15550277)
-            .setTimestamp();
+          const category = config.categories[ticket.categoryId] || { fullName: ticket.categoryId };
 
-          await user.send({
-            embeds: [dmEmbed],
-            files: [transcriptAttachment]
-          });
+          const textHeader = new TextDisplayBuilder().setContent(
+            `# Ticket Cerrado - AntiSocial\n` +
+            `Hola <@${user.id}>, tu ticket ha finalizado y ha sido cerrado por el equipo de Staff.`
+          );
+
+          const separator1 = new SeparatorBuilder().setDivider(true);
+
+          const textDetails = new TextDisplayBuilder().setContent(
+            `**Detalles del Ticket:**\n` +
+            `• **Ticket ID:** #${ticket.ticketNumber}\n` +
+            `• **Categoría:** ${category.fullName || ticket.categoryId}\n` +
+            `• **Canal:** \`${channel.name}\`\n` +
+            `• **Atendido por:** ${ticket.claimedBy ? `<@${ticket.claimedBy}>` : 'Staff de AntiSocial'}\n` +
+            `• **Cerrado por:** <@${interaction.user.id}>\n` +
+            `• **Motivo:** ${reason || 'Sin motivo especificado'}`
+          );
+
+          const separator2 = new SeparatorBuilder().setDivider(true);
+
+          const textFooter = new TextDisplayBuilder().setContent(
+            (transcriptAttachment
+              ? `Adjuntamos la transcripción HTML completa de la conversación para tu registro personal.\n\n`
+              : '') +
+            `-# Si necesitas asistencia adicional o tienes otra consulta, puedes abrir un nuevo ticket en el servidor cuando desees.`
+          );
+
+          const container = new ContainerBuilder()
+            .setAccentColor(config.panel.accentColor || 15550277)
+            .addTextDisplayComponents(textHeader)
+            .addSeparatorComponents(separator1)
+            .addTextDisplayComponents(textDetails)
+            .addSeparatorComponents(separator2)
+            .addTextDisplayComponents(textFooter);
+
+          const payload = {
+            flags: [MessageFlags.IsComponentsV2],
+            components: [container]
+          };
+
+          if (transcriptAttachment) {
+            payload.files = [transcriptAttachment];
+          }
+
+          await user.send(payload);
         }
       } catch (err) {
-        console.log(`No se pudo enviar el DM a ${ticket.userId} (posiblemente DMs cerrados).`);
+        console.log(`No se pudo enviar el DM a ${ticket.userId} (posiblemente DMs cerrados):`, err.message);
       }
     }
 
