@@ -3,7 +3,7 @@ const { buildTicketPanelPayload } = require('../components/panelBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('panel-setup')
+    .setName('panel')
     .setDescription('Envía el panel de tickets Embed V2 de AntiSocial al canal seleccionado')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addChannelOption(option =>
