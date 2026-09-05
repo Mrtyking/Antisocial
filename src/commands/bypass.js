@@ -1,13 +1,35 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const StorageService = require('../services/storageService');
+const config = require('../config');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('bypass')
-    .setDescription('Permite intervenir y enviar mensajes en un ticket reclamado por otro staff')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+    .setDescription('Permite intervenir y enviar mensajes en un ticket reclamado por otro staff'),
 
   async execute(interaction) {
+    const member = interaction.member;
+    const allowedRoles = config.ticketSettings?.bypassRoleIds || [
+      '1386921860360437831',
+      '1378868586633891882',
+      '1434233296908189776',
+      '1378867917487345785'
+    ];
+
+    const hasAllowedRole = member && member.roles && allowedRoles.some(roleId => {
+      if (Array.isArray(member.roles)) {
+        return member.roles.includes(roleId);
+      }
+      return member.roles.cache ? member.roles.cache.has(roleId) : false;
+    });
+
+    if (!hasAllowedRole) {
+      return interaction.reply({
+        content: 'No tienes permiso para usar este comando. Se requiere tener un rol autorizado obligatoriamente.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
     const channel = interaction.channel;
     const ticket = StorageService.getTicketByChannel(channel.id);
 

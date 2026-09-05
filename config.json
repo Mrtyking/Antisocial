@@ -210,6 +210,12 @@
     "categoryName": "TICKETS ANTISOCIAL",
     "parentCategoryId": "",
     "staffRoleId": "1386921860360437831",
+    "bypassRoleIds": [
+      "1386921860360437831",
+      "1378868586633891882",
+      "1434233296908189776",
+      "1378867917487345785"
+    ],
     "logsChannelId": "1379662712841306243",
     "maxTicketsPerUser": 1,
     "deleteCountdownSeconds": 5,
