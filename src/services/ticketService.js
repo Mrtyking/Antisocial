@@ -103,6 +103,22 @@ class TicketService {
   }
 
   /**
+   * Verifica si un miembro tiene rango Manager o superior
+   */
+  static isManagerOrAbove(member, guild = null) {
+    if (!member) return false;
+    const managerRoles = config.ticketSettings?.managerRoleIds || [
+      '1386921860360437831', // Anti Manager
+      '1378868586633891882', // Co Owner
+      '1434233296908189776', // Owner
+      '1378867917487345785'  // Founder
+    ];
+    const targetGuild = guild || member.guild;
+    return managerRoles.some(roleId => member.roles?.cache?.has(roleId)) ||
+           Boolean(targetGuild && targetGuild.ownerId === member.id);
+  }
+
+  /**
    * Crea un canal de ticket para el usuario
    */
   static async createTicket(interaction, categoryId, modalAnswers = null) {
@@ -397,6 +413,26 @@ class TicketService {
       });
     }
 
+    // El creador no puede reclamar su propio ticket
+    if (ticket.userId === interaction.user.id) {
+      return interaction.reply({
+        content: 'No puedes reclamar tu propio ticket.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    // Solo staff o manager puede reclamar
+    const staffRoleId = config.ticketSettings?.staffRoleId;
+    const isStaff = this.isManagerOrAbove(interaction.member, interaction.guild) ||
+                    (staffRoleId && interaction.member?.roles?.cache?.has(staffRoleId)) ||
+                    interaction.member?.permissions?.has(PermissionFlagsBits.ManageChannels);
+    if (!isStaff) {
+      return interaction.reply({
+        content: 'Solo los miembros del Staff pueden reclamar tickets.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
     if (ticket.claimedBy) {
       return interaction.reply({
         content: `Este ticket ya fue reclamado por <@${ticket.claimedBy}>.`,
@@ -441,6 +477,29 @@ class TicketService {
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
         content: 'Este canal no es un ticket de postulación válido.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    // 1. El postulante jamás puede aprobar su propia postulación
+    if (ticket.userId === interaction.user.id) {
+      return interaction.reply({
+        content: 'No puedes evaluar ni aprobar tu propia postulación.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    // 2. Solo Manager o superior puede aprobar postulaciones
+    if (!this.isManagerOrAbove(interaction.member, interaction.guild)) {
+      return interaction.reply({
+        content: 'No tienes permisos suficientes. Solo miembros con rango Manager o superior pueden aprobar postulaciones.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    if (ticket.postulacionStatus === 'approved') {
+      return interaction.reply({
+        content: 'Esta postulación ya ha sido aprobada previamente.',
         flags: [MessageFlags.Ephemeral]
       });
     }
@@ -512,6 +571,29 @@ class TicketService {
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
         content: 'Este canal no es un ticket de postulación válido.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    // 1. El postulante jamás puede rechazar su propia postulación
+    if (ticket.userId === interaction.user.id) {
+      return interaction.reply({
+        content: 'No puedes evaluar ni rechazar tu propia postulación.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    // 2. Solo Manager o superior puede rechazar postulaciones
+    if (!this.isManagerOrAbove(interaction.member, interaction.guild)) {
+      return interaction.reply({
+        content: 'No tienes permisos suficientes. Solo miembros con rango Manager o superior pueden rechazar postulaciones.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
+    if (ticket.postulacionStatus === 'denied') {
+      return interaction.reply({
+        content: 'Esta postulación ya ha sido rechazada previamente.',
         flags: [MessageFlags.Ephemeral]
       });
     }

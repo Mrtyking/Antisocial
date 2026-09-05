@@ -5,10 +5,12 @@ const {
   ActionRowBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
-  MessageFlags
+  MessageFlags,
+  PermissionFlagsBits
 } = require('discord.js');
 const TicketService = require('../services/ticketService');
 const DmPostulacionService = require('../services/dmPostulacionService');
+const StorageService = require('../services/storageService');
 const config = require('../config');
 
 module.exports = {
@@ -183,6 +185,22 @@ module.exports = {
         }
 
         if (customId === 'postulacion_control_deny') {
+          const ticket = StorageService.getTicketByChannel(interaction.channel.id);
+          if (ticket) {
+            if (ticket.userId === interaction.user.id) {
+              return interaction.reply({
+                content: 'No puedes evaluar ni rechazar tu propia postulación.',
+                flags: [MessageFlags.Ephemeral]
+              });
+            }
+            if (!TicketService.isManagerOrAbove(interaction.member, interaction.guild)) {
+              return interaction.reply({
+                content: 'No tienes permisos suficientes. Solo miembros con rango Manager o superior pueden rechazar postulaciones.',
+                flags: [MessageFlags.Ephemeral]
+              });
+            }
+          }
+
           const modal = new ModalBuilder()
             .setCustomId('modal_deny_postulacion')
             .setTitle('Rechazar Postulación');
@@ -215,6 +233,17 @@ module.exports = {
 
         // G. Botón: Añadir Miembro
         if (customId === 'ticket_control_add_user') {
+          const staffRoleId = config.ticketSettings?.staffRoleId;
+          const isStaff = TicketService.isManagerOrAbove(interaction.member, interaction.guild) ||
+                          (staffRoleId && interaction.member?.roles?.cache?.has(staffRoleId)) ||
+                          interaction.member?.permissions?.has(PermissionFlagsBits.ManageChannels);
+          if (!isStaff) {
+            return interaction.reply({
+              content: 'Solo los miembros del Staff pueden añadir usuarios al ticket.',
+              flags: [MessageFlags.Ephemeral]
+            });
+          }
+
           const modal = new ModalBuilder()
             .setCustomId('modal_add_user_ticket')
             .setTitle('Añadir Usuario al Ticket');
