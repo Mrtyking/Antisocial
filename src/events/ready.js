@@ -28,6 +28,21 @@ module.exports = {
     });
 
     const TicketService = require('../services/ticketService');
+    const StorageService = require('../services/storageService');
+
+    // Limpieza automática de tickets huérfanos cuyos canales ya fueron eliminados de Discord
+    try {
+      const activeTickets = StorageService.getAllActiveTickets();
+      for (const channelId of Object.keys(activeTickets)) {
+        if (!client.channels.cache.has(channelId)) {
+          StorageService.removeTicket(channelId);
+          console.log(`[ready] Limpiado ticket huérfano para el canal ${channelId}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[ready] Error al limpiar tickets huérfanos:', e.message);
+    }
+
     TicketService.startStaffReminderRoutine(client);
   }
 };

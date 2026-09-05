@@ -223,11 +223,20 @@ class DmPostulacionService {
   static async start(user, guild) {
     const activeTicket = StorageService.getActiveTicketByUser(user.id);
     if (activeTicket) {
-      return {
-        success: false,
-        error: 'already_has_ticket',
-        channelId: activeTicket.channelId
-      };
+      let existingChannel = guild.channels.cache.get(activeTicket.channelId);
+      if (!existingChannel) {
+        existingChannel = await guild.channels.fetch(activeTicket.channelId).catch(() => null);
+      }
+      if (existingChannel) {
+        return {
+          success: false,
+          error: 'already_has_ticket',
+          channelId: activeTicket.channelId
+        };
+      } else {
+        // El canal ya no existe en el servidor, limpiar el ticket huérfano de la base de datos
+        StorageService.removeTicket(activeTicket.channelId);
+      }
     }
 
     const session = {

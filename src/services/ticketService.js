@@ -71,7 +71,10 @@ class TicketService {
     // Verificar si ya tiene un ticket activo
     const activeTicket = StorageService.getActiveTicketByUser(user.id);
     if (activeTicket && config.ticketSettings.maxTicketsPerUser > 0) {
-      const existingChannel = guild.channels.cache.get(activeTicket.channelId);
+      let existingChannel = guild.channels.cache.get(activeTicket.channelId);
+      if (!existingChannel) {
+        existingChannel = await guild.channels.fetch(activeTicket.channelId).catch(() => null);
+      }
       if (existingChannel) {
         const msg = `Ya tienes un ticket abierto actualmente en <#${existingChannel.id}>. Por favor ciérralo antes de abrir uno nuevo.`;
         if (interaction.deferred) {
@@ -79,6 +82,9 @@ class TicketService {
         } else {
           return await interaction.reply({ content: msg, flags: [MessageFlags.Ephemeral] });
         }
+      } else {
+        // El canal ya no existe en el servidor, limpiar el ticket huérfano
+        StorageService.removeTicket(activeTicket.channelId);
       }
     }
 
