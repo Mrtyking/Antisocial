@@ -44,12 +44,12 @@ module.exports = {
       if (!permissions?.has(PermissionFlagsBits.EmbedLinks)) missing.push('Insertar enlaces');
 
       return interaction.editReply({
-        content: `❌ **El bot no tiene permisos para publicar en <#${targetChannel.id}>.**\n\n` +
+        content: `**El bot no tiene permisos para publicar en <#${targetChannel.id}>.**\n\n` +
                  `**Permisos que le faltan al bot en ese canal:**\n` +
                  missing.map(p => `• ${p}`).join('\n') +
                  `\n\n**¿Cómo solucionarlo?**\n` +
                  `1. Ve a los **Ajustes del Servidor > Roles > Rol del bot** y dale **Administrador** (opción más rápida).\n` +
-                 `2. O entra a los **Ajustes de <#${targetChannel.id}> > Permisos**, añade al bot **AntiSocial** y marca en verde (\`✅\`) los permisos de arriba.`
+                 `2. O entra a los **Ajustes de <#${targetChannel.id}> > Permisos**, añade al bot **AntiSocial** y activa los permisos de arriba.`
       });
     }
 
@@ -58,7 +58,7 @@ module.exports = {
       await targetChannel.send(payload);
 
       return interaction.editReply({
-        content: `✅ El panel de tickets Components V2 de **AntiSocial** ha sido enviado correctamente a <#${targetChannel.id}>.`
+        content: `El panel de tickets Components V2 de **AntiSocial** ha sido enviado correctamente a <#${targetChannel.id}>.`
       });
     } catch (err) {
       console.error('Error al enviar panel-setup:', err);

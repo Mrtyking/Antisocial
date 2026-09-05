@@ -11,7 +11,7 @@ module.exports = {
     const apiLatency = Math.round(interaction.client.ws.ping);
 
     await interaction.editReply({
-      content: `Pong! 🏓\nLatencia de respuesta: \`${latency}ms\`\nLatencia de API Discord: \`${apiLatency}ms\``
+      content: `Pong!\nLatencia de respuesta: \`${latency}ms\`\nLatencia de API Discord: \`${apiLatency}ms\``
     });
   }
 };

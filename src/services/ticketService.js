@@ -304,7 +304,7 @@ class TicketService {
     // Mención al staff
     const staffMention = config.ticketSettings.staffRoleId ? `<@&${config.ticketSettings.staffRoleId}> ` : '';
     await ticketChannel.send({
-      content: `${staffMention}📢 **Nueva postulación recibida de <@${user.id}>.**`
+      content: `${staffMention}**Nueva postulación recibida de <@${user.id}>.**`
     });
 
     // Enviar el panel con las 12 preguntas
@@ -407,7 +407,7 @@ class TicketService {
     }
 
     const approveEmbed = new EmbedBuilder()
-      .setTitle('✅ Postulación Aprobada')
+      .setTitle('Postulación Aprobada')
       .setColor(0x57F287)
       .setDescription(
         `¡La postulación de <@${ticket.userId}> ha sido **APROBADA** por <@${interaction.user.id}>!\n` +
@@ -422,7 +422,7 @@ class TicketService {
       const user = await interaction.client.users.fetch(ticket.userId);
       if (user) {
         const dmEmbed = new EmbedBuilder()
-          .setTitle('🎉 ¡Postulación Aprobada!')
+          .setTitle('¡Postulación Aprobada!')
           .setColor(0x57F287)
           .setDescription(
             `¡Felicidades <@${user.id}>! Tu postulación para **AntiSocial** ha sido **APROBADA** por <@${interaction.user.id}>.\n` +
@@ -468,7 +468,7 @@ class TicketService {
     }
 
     const denyEmbed = new EmbedBuilder()
-      .setTitle('❌ Postulación Rechazada')
+      .setTitle('Postulación Rechazada')
       .setColor(0xED4245)
       .setDescription(
         `La postulación de <@${ticket.userId}> ha sido **RECHAZADA** por <@${interaction.user.id}>.\n` +
@@ -511,12 +511,12 @@ class TicketService {
 
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
-        content: '🔒 Cerrando ticket...',
+        content: 'Cerrando ticket...',
         flags: [MessageFlags.Ephemeral]
       });
     } else {
       await interaction.reply({
-        content: '🔒 Cerrando ticket...',
+        content: 'Cerrando ticket...',
         flags: [MessageFlags.Ephemeral]
       });
     }
@@ -638,8 +638,8 @@ class TicketService {
 
     const embed = new EmbedBuilder()
       .setColor(config.panel.accentColor || 0xED4245)
-      .setDescription(`👤 <@${member.id}> ha sido añadido al ticket por <@${executor.id}>.`)
-      .setFooter({ text: '⏱️ Este mensaje se eliminará en 6 segundos' });
+      .setDescription(`<@${member.id}> ha sido añadido al ticket por <@${executor.id}>.`)
+      .setFooter({ text: 'Este mensaje se eliminará en 6 segundos' });
 
     const msg = await channel.send({ embeds: [embed] });
     setTimeout(() => {
@@ -657,8 +657,8 @@ class TicketService {
 
     const embed = new EmbedBuilder()
       .setColor(config.panel.accentColor || 0xED4245)
-      .setDescription(`👤 <@${member.id}> ha sido removido del ticket por <@${executor.id}>.`)
-      .setFooter({ text: '⏱️ Este mensaje se eliminará en 6 segundos' });
+      .setDescription(`<@${member.id}> ha sido removido del ticket por <@${executor.id}>.`)
+      .setFooter({ text: 'Este mensaje se eliminará en 6 segundos' });
 
     const msg = await channel.send({ embeds: [embed] });
     setTimeout(() => {
@@ -692,7 +692,7 @@ class TicketService {
 
                   const staffMention = config.ticketSettings.staffRoleId ? `<@&${config.ticketSettings.staffRoleId}> ` : '';
                   await channel.send({
-                    content: `${staffMention}⏰ **Recordatorio de Staff (${t.reminderCount}/${maxReminders}):** La postulación de <@${t.userId}> (#${t.ticketNumber}) sigue esperando revisión o reclamo.`
+                    content: `${staffMention}**Recordatorio de Staff (${t.reminderCount}/${maxReminders}):** La postulación de <@${t.userId}> (#${t.ticketNumber}) sigue esperando revisión o reclamo.`
                   });
                 }
               }

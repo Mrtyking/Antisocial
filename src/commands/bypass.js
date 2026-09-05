@@ -22,11 +22,11 @@ module.exports = {
 
     if (enabled) {
       return interaction.reply({
-        content: `✅ **Modo Bypass Activado:** <@${interaction.user.id}> ahora tiene permiso para intervenir y hablar en este ticket.`
+        content: `**Modo Bypass Activado:** <@${interaction.user.id}> ahora tiene permiso para intervenir y hablar en este ticket.`
       });
     } else {
       return interaction.reply({
-        content: `❌ **Modo Bypass Desactivado:** <@${interaction.user.id}> ya no tiene permiso de bypass en este ticket.`,
+        content: `**Modo Bypass Desactivado:** <@${interaction.user.id}> ya no tiene permiso de bypass en este ticket.`,
         flags: [MessageFlags.Ephemeral]
       });
     }

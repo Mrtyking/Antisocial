@@ -50,7 +50,7 @@ module.exports = {
 
         const pendingEmbed = new EmbedBuilder()
           .setColor(config.panel.accentColor || 15550277)
-          .setTitle('⏳ Postulación en Revisión')
+          .setTitle('Postulación en Revisión')
           .setDescription(
             `<@${message.author.id}>, tu postulación está actualmente **en revisión por el equipo de Staff**.\n` +
             `Por favor ten paciencia mientras revisamos tus respuestas. Podrás escribir en cuanto un miembro del Staff te responda o apruebe tu solicitud.`
@@ -81,7 +81,7 @@ module.exports = {
 
       const unlockEmbed = new EmbedBuilder()
         .setColor(0x57F287)
-        .setDescription(`🔓 **El Staff ha iniciado la conversación.** <@${ticket.userId}> ya puede responder en este ticket.`);
+        .setDescription(`**El Staff ha iniciado la conversación.** <@${ticket.userId}> ya puede responder en este ticket.`);
 
       await message.channel.send({ embeds: [unlockEmbed] }).catch(() => null);
     }
@@ -95,7 +95,7 @@ module.exports = {
         const warnEmbed = new EmbedBuilder()
           .setColor(0xED4245)
           .setDescription(
-            `⚠️ Este ticket fue reclamado por <@${ticket.claimedBy}>.\n` +
+            `Este ticket fue reclamado por <@${ticket.claimedBy}>.\n` +
             `Solo el staff asignado y el usuario pueden hablar aquí. Si necesitas intervenir como administrador, usa el comando \`/bypass\`.`
           )
           .setFooter({ text: 'Este aviso se eliminará automáticamente en 5 segundos' });

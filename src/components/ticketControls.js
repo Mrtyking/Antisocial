@@ -76,17 +76,17 @@ function buildTicketGreetingPayload(ticket, modalAnswers = null) {
 function buildPostulacionTicketPayload(ticket, user, answers) {
   const questions = config.categories.postular.questions;
 
-  let statusText = '⏳ **En Revisión** (El usuario no puede escribir hasta que el staff responda o apruebe)';
+  let statusText = '**En Revisión** (El usuario no puede escribir hasta que el staff responda o apruebe)';
   if (ticket.postulacionStatus === 'approved') {
-    statusText = `✅ **Aprobada**`;
+    statusText = `**Aprobada**`;
   } else if (ticket.postulacionStatus === 'denied') {
-    statusText = `❌ **Rechazada**`;
+    statusText = `**Rechazada**`;
   } else if (ticket.claimedBy) {
-    statusText = `⏳ **En Revisión** (Reclamado por <@${ticket.claimedBy}>)`;
+    statusText = `**En Revisión** (Reclamado por <@${ticket.claimedBy}>)`;
   }
 
   const embed = new EmbedBuilder()
-    .setTitle(`📋 Postulación a AntiSocial - #${ticket.ticketNumber}`)
+    .setTitle(`Postulación a AntiSocial - #${ticket.ticketNumber}`)
     .setColor(config.panel.accentColor || 15550277)
     .setThumbnail(user.displayAvatarURL ? user.displayAvatarURL({ dynamic: true }) : null)
     .setDescription(
