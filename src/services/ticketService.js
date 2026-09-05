@@ -52,6 +52,11 @@ class TicketService {
    * Crea un canal de ticket para el usuario
    */
   static async createTicket(interaction, categoryId, modalAnswers = null) {
+    // 1. Diferir la respuesta de inmediato para evitar el timeout de 3 segundos de Discord
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] }).catch(() => null);
+    }
+
     const guild = interaction.guild;
     const user = interaction.user;
     const category = config.categories[categoryId] || {
@@ -65,10 +70,12 @@ class TicketService {
     if (activeTicket && config.ticketSettings.maxTicketsPerUser > 0) {
       const existingChannel = guild.channels.cache.get(activeTicket.channelId);
       if (existingChannel) {
-        return interaction.reply({
-          content: `Ya tienes un ticket abierto actualmente en <#${existingChannel.id}>. Por favor ciérralo antes de abrir uno nuevo.`,
-          flags: [MessageFlags.Ephemeral]
-        });
+        const msg = `Ya tienes un ticket abierto actualmente en <#${existingChannel.id}>. Por favor ciérralo antes de abrir uno nuevo.`;
+        if (interaction.deferred) {
+          return await interaction.editReply({ content: msg });
+        } else {
+          return await interaction.reply({ content: msg, flags: [MessageFlags.Ephemeral] });
+        }
       }
     }
 
@@ -182,20 +189,24 @@ class TicketService {
 
       // Responder al usuario
       const replyContent = `Tu ticket ha sido creado con éxito en <#${ticketChannel.id}>.`;
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: replyContent, flags: [MessageFlags.Ephemeral] });
+      if (interaction.deferred) {
+        await interaction.editReply({ content: replyContent }).catch(() => null);
+      } else if (interaction.replied) {
+        await interaction.followUp({ content: replyContent, flags: [MessageFlags.Ephemeral] }).catch(() => null);
       } else {
-        await interaction.reply({ content: replyContent, flags: [MessageFlags.Ephemeral] });
+        await interaction.reply({ content: replyContent, flags: [MessageFlags.Ephemeral] }).catch(() => null);
       }
 
       return ticketChannel;
     } catch (err) {
       console.error('Error al crear canal de ticket:', err);
       const errorMsg = 'Ocurrió un error al crear el canal de ticket. Verifica los permisos del bot.';
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: errorMsg, flags: [MessageFlags.Ephemeral] });
+      if (interaction.deferred) {
+        await interaction.editReply({ content: errorMsg }).catch(() => null);
+      } else if (interaction.replied) {
+        await interaction.followUp({ content: errorMsg, flags: [MessageFlags.Ephemeral] }).catch(() => null);
       } else {
-        await interaction.reply({ content: errorMsg, flags: [MessageFlags.Ephemeral] });
+        await interaction.reply({ content: errorMsg, flags: [MessageFlags.Ephemeral] }).catch(() => null);
       }
     }
   }

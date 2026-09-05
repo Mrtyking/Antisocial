@@ -264,28 +264,26 @@ module.exports = {
 
         // Modal para añadir usuario
         if (customId === 'modal_add_user_ticket') {
+          await interaction.deferReply({ flags: [MessageFlags.Ephemeral] }).catch(() => null);
           const rawInput = interaction.fields.getTextInputValue('user_id_or_tag').trim();
           const cleanId = rawInput.replace(/[^0-9]/g, '');
 
           if (!cleanId) {
-            return interaction.reply({
-              content: 'ID de usuario inválida.',
-              flags: [MessageFlags.Ephemeral]
+            return interaction.editReply({
+              content: 'ID de usuario inválida.'
             });
           }
 
           const member = await interaction.guild.members.fetch(cleanId).catch(() => null);
           if (!member) {
-            return interaction.reply({
-              content: `No se pudo encontrar a ningún miembro con ID \`${cleanId}\` en este servidor.`,
-              flags: [MessageFlags.Ephemeral]
+            return interaction.editReply({
+              content: `No se pudo encontrar a ningún miembro con ID \`${cleanId}\` en este servidor.`
             });
           }
 
           await TicketService.addUser(interaction.channel, member, interaction.user);
-          return interaction.reply({
-            content: `Usuario <@${member.id}> añadido exitosamente.`,
-            flags: [MessageFlags.Ephemeral]
+          return interaction.editReply({
+            content: `Usuario <@${member.id}> añadido exitosamente.`
           });
         }
       }
@@ -295,7 +293,9 @@ module.exports = {
         content: 'Hubo un error inesperado al procesar tu solicitud.',
         flags: [MessageFlags.Ephemeral]
       };
-      if (interaction.replied || interaction.deferred) {
+      if (interaction.deferred) {
+        await interaction.editReply(errReply).catch(() => null);
+      } else if (interaction.replied) {
         await interaction.followUp(errReply).catch(() => null);
       } else {
         await interaction.reply(errReply).catch(() => null);
