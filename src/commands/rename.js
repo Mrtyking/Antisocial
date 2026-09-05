@@ -1,4 +1,5 @@
-﻿const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, EmbedBuilder } = require('discord.js');
+const TicketService = require('../services/ticketService');
 const StorageService = require('../services/storageService');
 const config = require('../config');
 
@@ -15,7 +16,7 @@ module.exports = {
 
   async execute(interaction) {
     const channel = interaction.channel;
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await TicketService.getTicketOrRecover(channel);
 
     if (!ticket) {
       return interaction.reply({

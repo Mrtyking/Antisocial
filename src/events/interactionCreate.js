@@ -185,7 +185,7 @@ module.exports = {
         }
 
         if (customId === 'postulacion_control_deny') {
-          const ticket = StorageService.getTicketByChannel(interaction.channel.id);
+          const ticket = await TicketService.getTicketOrRecover(interaction.channel);
           if (ticket) {
             if (ticket.userId === interaction.user.id) {
               return interaction.reply({

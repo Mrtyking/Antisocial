@@ -2,6 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { buildTicketPanelPayload } = require('../components/panelBuilder');
 const DmPostulacionService = require('../services/dmPostulacionService');
 const StorageService = require('../services/storageService');
+const TicketService = require('../services/ticketService');
 const config = require('../config');
 
 module.exports = {
@@ -40,7 +41,7 @@ module.exports = {
     }
 
     // 3. Auto-moderación dentro de canales de tickets
-    const ticket = StorageService.getTicketByChannel(message.channel.id);
+    const ticket = await TicketService.getTicketOrRecover(message.channel);
     if (!ticket) return;
 
     // Caso A: El usuario postulante intenta escribir mientras su postulación está en revisión

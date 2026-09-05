@@ -16,7 +16,7 @@ module.exports = {
 
   async execute(interaction) {
     const channel = interaction.channel;
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await TicketService.getTicketOrRecover(channel);
     const isTicketCategory = channel.parentId && (
       channel.parentId === config.ticketSettings?.parentCategoryId ||
       Object.values(config.categories || {}).some(c => c.parentCategoryId === channel.parentId)

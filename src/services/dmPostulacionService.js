@@ -13,11 +13,52 @@ const {
   TextInputBuilder,
   TextInputStyle
 } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const config = require('../config');
 const StorageService = require('./storageService');
 
-// Almacén de sesiones en progreso por usuario: userId -> session
-const sessions = new Map();
+const dataDir = path.join(__dirname, '../../data');
+const dmSessionsFile = path.join(dataDir, 'dm_sessions.json');
+
+function loadDmSessions() {
+  try {
+    if (fs.existsSync(dmSessionsFile)) {
+      const raw = fs.readFileSync(dmSessionsFile, 'utf8');
+      const data = JSON.parse(raw);
+      const map = new Map();
+      const now = Date.now();
+      // Descartar sesiones con más de 24 horas de antigüedad
+      for (const [userId, session] of Object.entries(data)) {
+        if (now - (session.startedAt || 0) < 24 * 60 * 60 * 1000) {
+          map.set(userId, session);
+        }
+      }
+      return map;
+    }
+  } catch (e) {
+    console.warn('[DmPostulacionService] Error al cargar sesiones de DM:', e.message);
+  }
+  return new Map();
+}
+
+function saveDmSessions(map) {
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    const obj = {};
+    for (const [userId, session] of map.entries()) {
+      obj[userId] = session;
+    }
+    fs.writeFileSync(dmSessionsFile, JSON.stringify(obj, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[DmPostulacionService] Error al guardar sesiones de DM:', e.message);
+  }
+}
+
+// Almacén de sesiones en progreso por usuario con persistencia en disco
+const sessions = loadDmSessions();
 
 class DmPostulacionService {
   static getQuestions() {
@@ -242,6 +283,7 @@ class DmPostulacionService {
     };
 
     sessions.set(user.id, session);
+    saveDmSessions(sessions);
 
     try {
       const payload = this.buildQuestionPayload(user, session);
@@ -249,6 +291,7 @@ class DmPostulacionService {
       return { success: true };
     } catch (err) {
       sessions.delete(user.id);
+      saveDmSessions(sessions);
       console.warn(`No se pudo enviar DM a ${user.tag}:`, err.message);
       return { success: false, error: 'dms_closed' };
     }
@@ -275,6 +318,7 @@ class DmPostulacionService {
 
     session.answers[currentStep] = answer.trim();
     session.currentStep++;
+    saveDmSessions(sessions);
 
     await interaction.deferUpdate().catch(() => null);
 
@@ -317,6 +361,7 @@ class DmPostulacionService {
 
     session.backUsed[step] = 1;
     session.currentStep--;
+    saveDmSessions(sessions);
 
     await interaction.deferUpdate().catch(() => null);
 
@@ -347,6 +392,7 @@ class DmPostulacionService {
 
     session.answers[currentStep] = answer;
     session.currentStep++;
+    saveDmSessions(sessions);
 
     if (session.currentStep < questions.length) {
       const payload = this.buildQuestionPayload(message.author, session);
@@ -365,6 +411,7 @@ class DmPostulacionService {
 
   static removeSession(userId) {
     sessions.delete(userId);
+    saveDmSessions(sessions);
   }
 }
 

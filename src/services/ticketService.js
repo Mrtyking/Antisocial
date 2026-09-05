@@ -119,6 +119,142 @@ class TicketService {
   }
 
   /**
+   * Intenta reconstruir y registrar los datos del ticket a partir del canal de Discord
+   * garantizando que nunca se pierda un ticket tras reiniciar o apagar el bot.
+   */
+  static async recoverTicketFromChannel(channel) {
+    if (!channel || channel.type !== ChannelType.GuildText) return null;
+
+    const channelName = channel.name || '';
+    const isPostulacion = channelName.startsWith('postulacion-');
+    let categoryId = isPostulacion ? 'postular' : 'soporte';
+
+    for (const [cId, cData] of Object.entries(config.categories || {})) {
+      if (channelName.startsWith(`${cData.prefix || cId}-`)) {
+        categoryId = cId;
+        break;
+      }
+    }
+
+    const isTicket = isPostulacion ||
+      channelName.startsWith('ticket-') ||
+      Object.values(config.categories || {}).some(c => channelName.startsWith(`${c.prefix || c.id}-`)) ||
+      (channel.topic && (channel.topic.includes('Ticket') || channel.topic.includes('Postulación')));
+
+    if (!isTicket) return null;
+
+    const topic = channel.topic || '';
+    let userId = null;
+    let ticketNumber = null;
+
+    // Extraer userId del topic: (123456789012345678)
+    const userIdMatch = topic.match(/\((\d{17,20})\)/);
+    if (userIdMatch) {
+      userId = userIdMatch[1];
+    }
+
+    // Extraer ticketNumber del topic o del nombre
+    const numberMatch = topic.match(/#(\d{4})/);
+    if (numberMatch) {
+      ticketNumber = numberMatch[1];
+    } else {
+      const nameParts = channelName.split('-');
+      const lastPart = nameParts[nameParts.length - 1];
+      if (/^\d{4}$/.test(lastPart)) {
+        ticketNumber = lastPart;
+      } else {
+        ticketNumber = StorageService.getNextTicketNumber();
+      }
+    }
+
+    // Si aún no tenemos userId, buscar en permissionOverwrites
+    if (!userId) {
+      try {
+        const overwrites = channel.permissionOverwrites.cache;
+        for (const [id, ow] of overwrites) {
+          if (id !== channel.guild.id && id !== channel.client?.user?.id && id !== config.ticketSettings?.staffRoleId) {
+            const member = await channel.guild.members.fetch(id).catch(() => null);
+            if (member && !member.user.bot) {
+              userId = id;
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Buscar si existe el mensaje del panel de controles
+    let panelMessageId = null;
+    try {
+      const messages = await channel.messages.fetch({ limit: 10 }).catch(() => null);
+      if (messages) {
+        const controlMsg = messages.find(m => m.author.id === channel.client?.user?.id && m.components?.length > 0);
+        if (controlMsg) {
+          panelMessageId = controlMsg.id;
+        }
+        if (!userId) {
+          for (const msg of messages.values()) {
+            const mentionMatch = msg.content?.match(/<@(\d{17,20})>/);
+            if (mentionMatch) {
+              userId = mentionMatch[1];
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
+    let userTag = 'Usuario';
+    try {
+      const u = await channel.client?.users?.fetch(userId).catch(() => null);
+      if (u) userTag = u.tag || u.username;
+    } catch (e) {}
+
+    let postulacionStatus = isPostulacion ? 'pending_review' : undefined;
+    let staffHasSpoken = !isPostulacion;
+
+    if (isPostulacion) {
+      const userOw = channel.permissionOverwrites?.cache?.get(userId);
+      if (userOw && userOw.allow?.has(PermissionFlagsBits.SendMessages)) {
+        postulacionStatus = 'approved';
+        staffHasSpoken = true;
+      }
+    }
+
+    const ticketData = {
+      channelId: channel.id,
+      guildId: channel.guild.id,
+      userId: userId,
+      userTag: userTag,
+      categoryId: categoryId,
+      ticketNumber: ticketNumber || '0001',
+      createdAt: channel.createdAt ? channel.createdAt.toISOString() : new Date().toISOString(),
+      isPostulacion: isPostulacion,
+      postulacionStatus: postulacionStatus,
+      staffHasSpoken: staffHasSpoken,
+      claimedBy: null,
+      bypassUsers: [],
+      panelMessageId: panelMessageId
+    };
+
+    StorageService.saveTicket(channel.id, ticketData);
+    console.log(`[Auto-Recovery] Ticket #${ticketNumber} en #${channel.name} (${channel.id}) restaurado con éxito para usuario ${userId}.`);
+    return ticketData;
+  }
+
+  /**
+   * Obtiene los datos del ticket desde StorageService o intenta recuperarlo automáticamente del canal
+   */
+  static async getTicketOrRecover(channel) {
+    if (!channel || !channel.id) return null;
+    let ticket = StorageService.getTicketByChannel(channel.id);
+    if (!ticket) {
+      ticket = await this.recoverTicketFromChannel(channel);
+    }
+    return ticket;
+  }
+
+  /**
    * Crea un canal de ticket para el usuario
    */
   static async createTicket(interaction, categoryId, modalAnswers = null) {
@@ -404,7 +540,7 @@ class TicketService {
    */
   static async claimTicket(interaction) {
     const channel = interaction.channel;
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await this.getTicketOrRecover(channel);
 
     if (!ticket) {
       return interaction.reply({
@@ -472,7 +608,7 @@ class TicketService {
    */
   static async approvePostulacion(interaction) {
     const channel = interaction.channel;
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await this.getTicketOrRecover(channel);
 
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
@@ -566,7 +702,7 @@ class TicketService {
    */
   static async denyPostulacion(interaction, reason) {
     const channel = interaction.channel;
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await this.getTicketOrRecover(channel);
 
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
@@ -675,7 +811,7 @@ class TicketService {
     }
 
     closingChannels.add(channel.id);
-    const ticket = StorageService.getTicketByChannel(channel.id);
+    const ticket = await this.getTicketOrRecover(channel);
 
     try {
       if (interaction.replied || interaction.deferred) {

@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('Genera y descarga la transcripción HTML de este ticket'),
 
   async execute(interaction) {
-    const ticket = StorageService.getTicketByChannel(interaction.channel.id);
+    const ticket = await TicketService.getTicketOrRecover(interaction.channel);
     if (!ticket) {
       return interaction.reply({
         content: 'Este canal no parece ser un ticket activo de AntiSocial.',
