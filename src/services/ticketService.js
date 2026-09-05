@@ -509,9 +509,17 @@ class TicketService {
     const channel = interaction.channel;
     const ticket = StorageService.getTicketByChannel(channel.id);
 
-    await interaction.reply({
-      content: 'Cerrando el ticket y generando transcripción... El canal se eliminará en 5 segundos.'
-    });
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: '🔒 Cerrando ticket...',
+        flags: [MessageFlags.Ephemeral]
+      });
+    } else {
+      await interaction.reply({
+        content: '🔒 Cerrando ticket...',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
 
     let transcriptAttachment = null;
     try {
