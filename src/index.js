@@ -61,11 +61,16 @@ process.on('uncaughtException', error => {
   console.error('Uncaught exception:', error);
 });
 
-// Desplegar comandos y conectar el bot
+// Conectar el bot inmediatamente para que aparezca online sin bloqueos
 (async () => {
   try {
-    await deployCommands();
+    console.log('Iniciando sesión en Discord Gateway...');
     await client.login(config.token);
+
+    // Una vez conectado con éxito, registrar comandos de barra en segundo plano
+    deployCommands(client).catch(err => {
+      console.warn('Aviso en registro de comandos:', err.message);
+    });
   } catch (error) {
     console.error('Error al iniciar el bot AntiSocial:', error);
   }

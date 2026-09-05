@@ -17,37 +17,57 @@ for (const file of commandFiles) {
   }
 }
 
-const rest = new REST({ version: '10' }).setToken(config.token);
+const rest = new REST({ version: '10' });
 
-async function deploy() {
+async function deploy(client = null) {
   try {
+    const token = config.token;
+    if (!token) {
+      console.warn('[deploy-commands] No se configuró DISCORD_TOKEN.');
+      return;
+    }
+
+    rest.setToken(token);
+
+    const clientId = (client?.user?.id || config.clientId || '').trim();
+    if (!clientId || !/^\d{17,20}$/.test(clientId)) {
+      console.warn(`[deploy-commands] CLIENT_ID inválido (${clientId}). Se omitió el registro de comandos.`);
+      return;
+    }
+
     console.log(`Iniciando registro de ${commands.length} comandos de barra (/)...`);
 
     // Servidor Principal AntiSocial
-    if (config.guildId) {
-      console.log(`Registrando en Servidor Principal (${config.guildId})...`);
-      await rest.put(
-        Routes.applicationGuildCommands(config.clientId, config.guildId),
-        { body: commands }
-      );
-      console.log(`Comandos registrados en el Servidor Principal (${config.guildId}).`);
-    }
-
-    // Servidor Test
-    if (config.testGuildId && config.testGuildId !== config.guildId) {
+    const mainGuildId = (config.guildId || '').trim();
+    if (mainGuildId && /^\d{17,20}$/.test(mainGuildId)) {
       try {
-        console.log(`Registrando en Servidor Test (${config.testGuildId})...`);
+        console.log(`Registrando en Servidor Principal (${mainGuildId})...`);
         await rest.put(
-          Routes.applicationGuildCommands(config.clientId, config.testGuildId),
+          Routes.applicationGuildCommands(clientId, mainGuildId),
           { body: commands }
         );
-        console.log(`Comandos registrados en el Servidor Test (${config.testGuildId}).`);
-      } catch (e) {
-        console.warn(`Aviso: No se pudo registrar en Servidor Test (${config.testGuildId}): ${e.message}`);
+        console.log(`Comandos registrados en el Servidor Principal (${mainGuildId}).`);
+      } catch (err) {
+        console.warn(`Aviso: No se pudieron registrar comandos en Servidor Principal (${mainGuildId}):`, err.message);
       }
     }
 
-    console.log('Registro de comandos completado con éxito.');
+    // Servidor Test (solo si es una ID numérica válida y diferente a la principal)
+    const testGuildId = (config.testGuildId || '').trim();
+    if (testGuildId && /^\d{17,20}$/.test(testGuildId) && testGuildId !== mainGuildId) {
+      try {
+        console.log(`Registrando en Servidor Test (${testGuildId})...`);
+        await rest.put(
+          Routes.applicationGuildCommands(clientId, testGuildId),
+          { body: commands }
+        );
+        console.log(`Comandos registrados en el Servidor Test (${testGuildId}).`);
+      } catch (err) {
+        console.warn(`Aviso: No se pudo registrar en Servidor Test (${testGuildId}):`, err.message);
+      }
+    }
+
+    console.log('Proceso de registro de comandos finalizado.');
   } catch (error) {
     console.error('Error durante el registro de comandos:', error);
   }
