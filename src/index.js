@@ -26,6 +26,8 @@ const client = new Client({
 
 client.commands = new Collection();
 
+const ALLOWED_COMMANDS = ['add', 'bypass', 'close', 'panel', 'remove', 'rename', 'transcript'];
+
 // Cargar comandos
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -34,7 +36,11 @@ for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
   if ('data' in command && 'execute' in command) {
-    client.commands.set(command.data.name, command);
+    if (ALLOWED_COMMANDS.includes(command.data.name)) {
+      client.commands.set(command.data.name, command);
+    } else {
+      console.log(`[index] Ignorando comando viejo: ${command.data.name}`);
+    }
   }
 }
 

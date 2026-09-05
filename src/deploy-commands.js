@@ -3,18 +3,38 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 
-const commands = [];
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const ALLOWED_COMMANDS = [
+  'add',
+  'bypass',
+  'close',
+  'panel',
+  'remove',
+  'rename',
+  'transcript'
+];
 
-for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = require(filePath);
-  if ('data' in command && 'execute' in command) {
-    commands.push(command.data.toJSON());
-  } else {
-    console.warn(`[ADVERTENCIA] El comando en ${filePath} no tiene "data" o "execute".`);
+function loadCommands() {
+  const commands = [];
+  const commandsPath = path.join(__dirname, 'commands');
+  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+  for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    try {
+      delete require.cache[require.resolve(filePath)];
+      const command = require(filePath);
+      if ('data' in command && 'execute' in command) {
+        if (ALLOWED_COMMANDS.includes(command.data.name)) {
+          commands.push(command.data.toJSON());
+        } else {
+          console.log(`[deploy-commands] Omitiendo comando obsoleto del archivo: ${command.data.name}`);
+        }
+      }
+    } catch (e) {
+      console.warn(`[deploy-commands] Error cargando ${file}:`, e.message);
+    }
   }
+  return commands;
 }
 
 const rest = new REST({ version: '10' });
@@ -35,46 +55,53 @@ async function deploy(client = null) {
       return;
     }
 
-    // 1. Limpiar comandos globales para evitar comandos duplicados en la lista de Discord
+    // 1. Limpiar comandos globales para que no queden comandos obsoletos en caché global
     try {
       await rest.put(Routes.applicationCommands(clientId), { body: [] });
     } catch (e) {
       // Silencioso
     }
 
+    const commands = loadCommands();
     console.log(`Iniciando registro de ${commands.length} comandos de barra (/)...`);
+
+    async function syncGuild(guildId, guildName) {
+      try {
+        console.log(`Sincronizando comandos en ${guildName} (${guildId})...`);
+
+        // Obtener comandos existentes y eliminar los obsoletos explícitamente
+        const existing = await rest.get(Routes.applicationGuildCommands(clientId, guildId));
+        for (const cmd of existing) {
+          if (!ALLOWED_COMMANDS.includes(cmd.name)) {
+            console.log(`[deploy-commands] Purgando comando obsoleto en ${guildName}: ${cmd.name} (ID: ${cmd.id})`);
+            await rest.delete(Routes.applicationGuildCommand(clientId, guildId, cmd.id)).catch(() => null);
+          }
+        }
+
+        // Registrar lista limpia
+        await rest.put(
+          Routes.applicationGuildCommands(clientId, guildId),
+          { body: commands }
+        );
+        console.log(`Comandos limpios registrados en ${guildName} (${guildId}):`, commands.map(c => `/${c.name}`).join(', '));
+      } catch (err) {
+        console.warn(`Aviso en ${guildName} (${guildId}):`, err.message);
+      }
+    }
 
     // 2. Servidor Principal AntiSocial
     const mainGuildId = (config.guildId || '').trim();
     if (mainGuildId && /^\d{17,20}$/.test(mainGuildId)) {
-      try {
-        console.log(`Registrando en Servidor Principal (${mainGuildId})...`);
-        await rest.put(
-          Routes.applicationGuildCommands(clientId, mainGuildId),
-          { body: commands }
-        );
-        console.log(`Comandos registrados en el Servidor Principal (${mainGuildId}).`);
-      } catch (err) {
-        console.warn(`Aviso en Servidor Principal (${mainGuildId}):`, err.message);
-      }
+      await syncGuild(mainGuildId, 'Servidor Principal');
     }
 
-    // 3. Servidor Test (solo si es una ID numérica válida y diferente a la principal)
+    // 3. Servidor Test (si aplica)
     const testGuildId = (config.testGuildId || '').trim();
     if (testGuildId && /^\d{17,20}$/.test(testGuildId) && testGuildId !== mainGuildId) {
-      try {
-        console.log(`Registrando en Servidor Test (${testGuildId})...`);
-        await rest.put(
-          Routes.applicationGuildCommands(clientId, testGuildId),
-          { body: commands }
-        );
-        console.log(`Comandos registrados en el Servidor Test (${testGuildId}).`);
-      } catch (err) {
-        console.warn(`Aviso en Servidor Test (${testGuildId}):`, err.message);
-      }
+      await syncGuild(testGuildId, 'Servidor Test');
     }
 
-    console.log('Proceso de registro de comandos finalizado (sin duplicados).');
+    console.log('Proceso de registro finalizado: únicamente comandos cortos y limpios activos.');
   } catch (error) {
     console.error('Error durante el registro de comandos:', error);
   }
