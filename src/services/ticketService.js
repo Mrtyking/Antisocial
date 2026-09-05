@@ -21,6 +21,8 @@ const {
   buildPostulacionTicketPayload
 } = require('../components/ticketControls');
 
+const closingChannels = new Set();
+
 class TicketService {
   /**
    * Genera el modal según la categoría
@@ -571,18 +573,42 @@ class TicketService {
    */
   static async closeTicket(interaction, reason = 'Sin motivo especificado') {
     const channel = interaction.channel;
+    if (!channel) return;
+
+    if (closingChannels.has(channel.id)) {
+      try {
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: 'Este ticket ya se encuentra en proceso de cierre.',
+            flags: [MessageFlags.Ephemeral]
+          }).catch(() => null);
+        } else {
+          await interaction.reply({
+            content: 'Este ticket ya se encuentra en proceso de cierre.',
+            flags: [MessageFlags.Ephemeral]
+          }).catch(() => null);
+        }
+      } catch (e) {}
+      return;
+    }
+
+    closingChannels.add(channel.id);
     const ticket = StorageService.getTicketByChannel(channel.id);
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: 'Cerrando ticket...',
-        flags: [MessageFlags.Ephemeral]
-      });
-    } else {
-      await interaction.reply({
-        content: 'Cerrando ticket...',
-        flags: [MessageFlags.Ephemeral]
-      });
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: 'Cerrando ticket...',
+          flags: [MessageFlags.Ephemeral]
+        }).catch(() => null);
+      } else {
+        await interaction.reply({
+          content: 'Cerrando ticket...',
+          flags: [MessageFlags.Ephemeral]
+        }).catch(() => null);
+      }
+    } catch (err) {
+      console.warn('Aviso al responder interacción de cierre:', err.message);
     }
 
     let transcriptAttachment = null;
@@ -691,9 +717,11 @@ class TicketService {
     const countdown = config.ticketSettings.deleteCountdownSeconds || 5;
     setTimeout(async () => {
       try {
-        await channel.delete(`Ticket cerrado por ${interaction.user.tag}`);
+        await channel.delete(`Ticket cerrado por ${interaction.user.tag}`).catch(() => null);
       } catch (err) {
         console.error('Error al eliminar el canal del ticket:', err);
+      } finally {
+        closingChannels.delete(channel.id);
       }
     }, countdown * 1000);
   }

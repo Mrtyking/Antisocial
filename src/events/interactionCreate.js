@@ -34,25 +34,25 @@ module.exports = {
 
           // Flujo por DM si es postulación
           if (categoryId === 'postular' && category?.useDmFlow) {
+            if (!interaction.deferred && !interaction.replied) {
+              await interaction.deferReply({ flags: [MessageFlags.Ephemeral] }).catch(() => null);
+            }
             const result = await DmPostulacionService.start(interaction.user, interaction.guild);
             if (!result.success) {
               if (result.error === 'limit_reached' || result.error === 'already_has_ticket') {
-                return interaction.reply({
-                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`,
-                  flags: [MessageFlags.Ephemeral]
-                });
+                return interaction.editReply({
+                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`
+                }).catch(() => null);
               }
               if (result.error === 'dms_closed') {
-                return interaction.reply({
-                  content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a presionar el botón.`,
-                  flags: [MessageFlags.Ephemeral]
-                });
+                return interaction.editReply({
+                  content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a presionar el botón.`
+                }).catch(() => null);
               }
             }
-            return interaction.reply({
-              content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`,
-              flags: [MessageFlags.Ephemeral]
-            });
+            return interaction.editReply({
+              content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`
+            }).catch(() => null);
           }
 
           // Otras categorías con modal
@@ -69,44 +69,79 @@ module.exports = {
         if (customId === 'postulacion_btn_confirm') {
           const session = DmPostulacionService.getSession(interaction.user.id);
           if (!session) {
+            const expiredContainer = new ContainerBuilder()
+              .setAccentColor(0xED4245)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                  '# Sesión Expirada\nLa sesión de postulación ha expirado o no existe. Por favor pulsa de nuevo el botón en el servidor.'
+                )
+              );
             return interaction.reply({
-              content: 'La sesión de postulación ha expirado o no existe. Por favor pulsa de nuevo el botón en el servidor.',
-              flags: [MessageFlags.Ephemeral]
-            });
+              flags: [MessageFlags.IsComponentsV2],
+              components: [expiredContainer]
+            }).catch(() => null);
           }
 
           const targetGuild = client.guilds.cache.get(session.guildId) || client.guilds.cache.get(config.guildId);
           if (!targetGuild) {
+            const errorContainer = new ContainerBuilder()
+              .setAccentColor(0xED4245)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                  '# Error de Servidor\nNo se pudo localizar el servidor de Discord.'
+                )
+              );
             return interaction.reply({
-              content: 'Error: No se pudo localizar el servidor de Discord.',
-              flags: [MessageFlags.Ephemeral]
-            });
+              flags: [MessageFlags.IsComponentsV2],
+              components: [errorContainer]
+            }).catch(() => null);
           }
 
-          await interaction.deferUpdate();
+          await interaction.deferUpdate().catch(() => null);
 
           const ticketChannel = await TicketService.createPostulacionTicket(interaction.user, targetGuild, session.answers);
           DmPostulacionService.removeSession(interaction.user.id);
 
           if (ticketChannel?.error) {
+            const limitContainer = new ContainerBuilder()
+              .setAccentColor(0xED4245)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                  `# Límite de Tickets\n${ticketChannel.error}`
+                )
+              );
             return interaction.editReply({
-              content: ticketChannel.error,
-              components: [],
-              embeds: []
-            });
+              flags: [MessageFlags.IsComponentsV2],
+              components: [limitContainer]
+            }).catch(() => null);
           }
 
           if (ticketChannel) {
+            const successContainer = new ContainerBuilder()
+              .setAccentColor(config.panel.accentColor || 15550277)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                  `# Postulación Enviada con Éxito\n` +
+                  `Se ha creado tu canal de ticket en el servidor: <#${ticketChannel.id}>.\n\n` +
+                  `Un miembro del equipo de Staff revisará tus respuestas. Recuerda que podrás escribir en cuanto un Staff te responda o apruebe tu postulación.`
+                )
+              );
             return interaction.editReply({
-              content: `**¡Tu postulación ha sido enviada con éxito!**\nSe ha creado tu canal de ticket en el servidor: <#${ticketChannel.id}>.\nUn miembro del equipo de Staff revisará tus respuestas. Recuerda que podrás escribir en cuanto un Staff te responda o apruebe tu postulación.`,
-              components: [],
-              embeds: []
-            });
+              flags: [MessageFlags.IsComponentsV2],
+              components: [successContainer]
+            }).catch(() => null);
           } else {
+            const failContainer = new ContainerBuilder()
+              .setAccentColor(0xED4245)
+              .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                  '# Error al Crear Ticket\nOcurrió un error al crear tu ticket en el servidor. Por favor contacta a un administrador.'
+                )
+              );
             return interaction.editReply({
-              content: 'Ocurrió un error al crear tu ticket en el servidor. Por favor contacta a un administrador.',
-              components: []
-            });
+              flags: [MessageFlags.IsComponentsV2],
+              components: [failContainer]
+            }).catch(() => null);
           }
         }
 
@@ -203,25 +238,25 @@ module.exports = {
           const category = config.categories[categoryId];
 
           if (categoryId === 'postular' && category?.useDmFlow) {
+            if (!interaction.deferred && !interaction.replied) {
+              await interaction.deferReply({ flags: [MessageFlags.Ephemeral] }).catch(() => null);
+            }
             const result = await DmPostulacionService.start(interaction.user, interaction.guild);
             if (!result.success) {
               if (result.error === 'limit_reached' || result.error === 'already_has_ticket') {
-                return interaction.reply({
-                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`,
-                  flags: [MessageFlags.Ephemeral]
-                });
+                return interaction.editReply({
+                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`
+                }).catch(() => null);
               }
               if (result.error === 'dms_closed') {
-                return interaction.reply({
-                  content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a intentarlo.`,
-                  flags: [MessageFlags.Ephemeral]
-                });
+                return interaction.editReply({
+                  content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a intentarlo.`
+                }).catch(() => null);
               }
             }
-            return interaction.reply({
-              content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`,
-              flags: [MessageFlags.Ephemeral]
-            });
+            return interaction.editReply({
+              content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`
+            }).catch(() => null);
           }
 
           if (category && category.requireModal && category.questions && category.questions.length > 0) {
