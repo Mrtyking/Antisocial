@@ -114,8 +114,13 @@ class TicketService {
       '1378867917487345785'  // Founder
     ];
     const targetGuild = guild || member.guild;
-    return managerRoles.some(roleId => member.roles?.cache?.has(roleId)) ||
-           Boolean(targetGuild && targetGuild.ownerId === member.id);
+    const hasRole = Array.isArray(member.roles)
+      ? managerRoles.some(roleId => member.roles.includes(roleId))
+      : managerRoles.some(roleId => member.roles?.cache?.has(roleId));
+
+    return hasRole ||
+           Boolean(targetGuild && targetGuild.ownerId === member.id) ||
+           Boolean(member.permissions?.has && member.permissions.has(PermissionFlagsBits.Administrator));
   }
 
   /**
@@ -792,6 +797,19 @@ class TicketService {
   static async closeTicket(interaction, reason = 'Sin motivo especificado') {
     const channel = interaction.channel;
     if (!channel) return;
+
+    // Solo miembros con rango Manager o superior pueden cerrar tickets
+    if (!this.isManagerOrAbove(interaction.member, interaction.guild)) {
+      const errPayload = {
+        content: 'No tienes permisos suficientes para cerrar este ticket. Solo miembros con rango Manager o superior pueden cerrar tickets.',
+        flags: [MessageFlags.Ephemeral]
+      };
+      if (interaction.replied || interaction.deferred) {
+        return await interaction.followUp(errPayload).catch(() => null);
+      } else {
+        return await interaction.reply(errPayload).catch(() => null);
+      }
+    }
 
     if (closingChannels.has(channel.id)) {
       try {

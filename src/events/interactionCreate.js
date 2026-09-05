@@ -218,6 +218,12 @@ module.exports = {
 
         // D. Botón: Cerrar Ticket
         if (customId === 'ticket_control_close') {
+          if (!TicketService.isManagerOrAbove(interaction.member, interaction.guild)) {
+            return interaction.reply({
+              content: 'No tienes permisos suficientes para cerrar este ticket. Solo miembros con rango Manager o superior pueden cerrar tickets.',
+              flags: [MessageFlags.Ephemeral]
+            });
+          }
           return await TicketService.closeTicket(interaction, 'Cerrado desde el botón de controles');
         }
 

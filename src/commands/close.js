@@ -29,6 +29,13 @@ module.exports = {
       });
     }
 
+    if (!TicketService.isManagerOrAbove(interaction.member, interaction.guild)) {
+      return interaction.reply({
+        content: 'No tienes permisos suficientes para cerrar este ticket. Solo miembros con rango Manager o superior pueden cerrar tickets.',
+        flags: [MessageFlags.Ephemeral]
+      });
+    }
+
     const reason = interaction.options.getString('motivo') || 'Cerrado mediante comando /close';
     return TicketService.closeTicket(interaction, reason);
   }
