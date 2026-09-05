@@ -636,7 +636,17 @@ class TicketService {
       EmbedLinks: true
     });
 
-    return channel.send(`El usuario <@${member.id}> ha sido añadido al ticket por <@${executor.id}>.`);
+    const embed = new EmbedBuilder()
+      .setColor(config.panel.accentColor || 0xED4245)
+      .setDescription(`👤 <@${member.id}> ha sido añadido al ticket por <@${executor.id}>.`)
+      .setFooter({ text: '⏱️ Este mensaje se eliminará en 6 segundos' });
+
+    const msg = await channel.send({ embeds: [embed] });
+    setTimeout(() => {
+      msg.delete().catch(() => null);
+    }, 6000);
+
+    return msg;
   }
 
   /**
@@ -644,7 +654,18 @@ class TicketService {
    */
   static async removeUser(channel, member, executor) {
     await channel.permissionOverwrites.delete(member.id);
-    return channel.send(`El usuario <@${member.id}> ha sido removido del ticket por <@${executor.id}>.`);
+
+    const embed = new EmbedBuilder()
+      .setColor(config.panel.accentColor || 0xED4245)
+      .setDescription(`👤 <@${member.id}> ha sido removido del ticket por <@${executor.id}>.`)
+      .setFooter({ text: '⏱️ Este mensaje se eliminará en 6 segundos' });
+
+    const msg = await channel.send({ embeds: [embed] });
+    setTimeout(() => {
+      msg.delete().catch(() => null);
+    }, 6000);
+
+    return msg;
   }
 
   /**
