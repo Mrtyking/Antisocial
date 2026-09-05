@@ -37,7 +37,19 @@ async function deploy(client = null) {
 
     console.log(`Iniciando registro de ${commands.length} comandos de barra (/)...`);
 
-    // Servidor Principal AntiSocial
+    // 1. Registro Global (funciona siempre, sin importar en qué servidor esté el bot)
+    try {
+      console.log(`Registrando comandos globalmente para la aplicación (${clientId})...`);
+      await rest.put(
+        Routes.applicationCommands(clientId),
+        { body: commands }
+      );
+      console.log('Comandos globales registrados con éxito.');
+    } catch (err) {
+      console.warn('Aviso en comandos globales:', err.message);
+    }
+
+    // 2. Servidor Principal AntiSocial
     const mainGuildId = (config.guildId || '').trim();
     if (mainGuildId && /^\d{17,20}$/.test(mainGuildId)) {
       try {
@@ -48,11 +60,11 @@ async function deploy(client = null) {
         );
         console.log(`Comandos registrados en el Servidor Principal (${mainGuildId}).`);
       } catch (err) {
-        console.warn(`Aviso: No se pudieron registrar comandos en Servidor Principal (${mainGuildId}):`, err.message);
+        console.warn(`Aviso en Servidor Principal (${mainGuildId}):`, err.message);
       }
     }
 
-    // Servidor Test (solo si es una ID numérica válida y diferente a la principal)
+    // 3. Servidor Test (solo si es una ID numérica válida y diferente a la principal)
     const testGuildId = (config.testGuildId || '').trim();
     if (testGuildId && /^\d{17,20}$/.test(testGuildId) && testGuildId !== mainGuildId) {
       try {
@@ -63,7 +75,7 @@ async function deploy(client = null) {
         );
         console.log(`Comandos registrados en el Servidor Test (${testGuildId}).`);
       } catch (err) {
-        console.warn(`Aviso: No se pudo registrar en Servidor Test (${testGuildId}):`, err.message);
+        console.warn(`Aviso en Servidor Test (${testGuildId}):`, err.message);
       }
     }
 
