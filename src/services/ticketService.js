@@ -7,7 +7,8 @@ const {
   ButtonStyle,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle
+  TextInputStyle,
+  MessageFlags
 } = require('discord.js');
 const discordTranscripts = require('discord-html-transcripts');
 const config = require('../config');
@@ -66,7 +67,7 @@ class TicketService {
       if (existingChannel) {
         return interaction.reply({
           content: `Ya tienes un ticket abierto actualmente en <#${existingChannel.id}>. Por favor ciérralo antes de abrir uno nuevo.`,
-          ephemeral: true
+          flags: [MessageFlags.Ephemeral]
         });
       }
     }
@@ -182,9 +183,9 @@ class TicketService {
       // Responder al usuario
       const replyContent = `Tu ticket ha sido creado con éxito en <#${ticketChannel.id}>.`;
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: replyContent, ephemeral: true });
+        await interaction.followUp({ content: replyContent, flags: [MessageFlags.Ephemeral] });
       } else {
-        await interaction.reply({ content: replyContent, ephemeral: true });
+        await interaction.reply({ content: replyContent, flags: [MessageFlags.Ephemeral] });
       }
 
       return ticketChannel;
@@ -192,9 +193,9 @@ class TicketService {
       console.error('Error al crear canal de ticket:', err);
       const errorMsg = 'Ocurrió un error al crear el canal de ticket. Verifica los permisos del bot.';
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: errorMsg, ephemeral: true });
+        await interaction.followUp({ content: errorMsg, flags: [MessageFlags.Ephemeral] });
       } else {
-        await interaction.reply({ content: errorMsg, ephemeral: true });
+        await interaction.reply({ content: errorMsg, flags: [MessageFlags.Ephemeral] });
       }
     }
   }
@@ -326,14 +327,14 @@ class TicketService {
     if (!ticket) {
       return interaction.reply({
         content: 'Este canal no está registrado como un ticket activo.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
     if (ticket.claimedBy) {
       return interaction.reply({
         content: `Este ticket ya fue reclamado por <@${ticket.claimedBy}>.`,
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -374,7 +375,7 @@ class TicketService {
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
         content: 'Este canal no es un ticket de postulación válido.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -445,7 +446,7 @@ class TicketService {
     if (!ticket || !ticket.isPostulacion) {
       return interaction.reply({
         content: 'Este canal no es un ticket de postulación válido.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 

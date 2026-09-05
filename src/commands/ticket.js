@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const TicketService = require('../services/ticketService');
 const StorageService = require('../services/storageService');
 
@@ -52,7 +52,7 @@ module.exports = {
     if (!ticket && subcommand !== 'close') {
       return interaction.reply({
         content: 'Este canal no parece ser un ticket activo de AntiSocial.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -67,13 +67,13 @@ module.exports = {
       if (!member) {
         return interaction.reply({
           content: 'No se pudo encontrar al miembro en este servidor.',
-          ephemeral: true
+          flags: [MessageFlags.Ephemeral]
         });
       }
       await TicketService.addUser(interaction.channel, member, interaction.user);
       return interaction.reply({
         content: `Usuario <@${member.id}> añadido al ticket.`,
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -83,13 +83,13 @@ module.exports = {
       if (!member) {
         return interaction.reply({
           content: 'No se pudo encontrar al miembro en este servidor.',
-          ephemeral: true
+          flags: [MessageFlags.Ephemeral]
         });
       }
       await TicketService.removeUser(interaction.channel, member, interaction.user);
       return interaction.reply({
         content: `Usuario <@${member.id}> removido del ticket.`,
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 

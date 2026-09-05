@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -6,7 +6,7 @@ module.exports = {
     .setDescription('Comprueba la latencia del bot AntiSocial'),
 
   async execute(interaction) {
-    const sent = await interaction.reply({ content: 'Calculando ping...', fetchReply: true, ephemeral: true });
+    const sent = await interaction.reply({ content: 'Calculando ping...', fetchReply: true, flags: [MessageFlags.Ephemeral] });
     const latency = sent.createdTimestamp - interaction.createdTimestamp;
     const apiLatency = Math.round(interaction.client.ws.ping);
 

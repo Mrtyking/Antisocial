@@ -261,7 +261,7 @@ class DmPostulacionService {
     if (!session) {
       return interaction.reply({
         content: 'La sesión de postulación ha expirado o no existe.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -294,14 +294,14 @@ class DmPostulacionService {
     if (!session) {
       return interaction.reply({
         content: 'No tienes una sesión activa de postulación.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
     if (session.currentStep <= 0) {
       return interaction.reply({
         content: 'Ya estás en la primera pregunta.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -310,7 +310,7 @@ class DmPostulacionService {
     if (backUsedCount >= 1) {
       return interaction.reply({
         content: 'Solo se permite retroceder 1 vez por pregunta.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 

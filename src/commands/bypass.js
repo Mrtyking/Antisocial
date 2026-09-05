@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const StorageService = require('../services/storageService');
 
 module.exports = {
@@ -14,7 +14,7 @@ module.exports = {
     if (!ticket) {
       return interaction.reply({
         content: 'Este comando solo se puede usar dentro de un canal de ticket activo.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
 
@@ -22,13 +22,12 @@ module.exports = {
 
     if (enabled) {
       return interaction.reply({
-        content: `✅ **Modo Bypass Activado:** <@${interaction.user.id}> ahora tiene permiso para intervenir y hablar en este ticket.`,
-        ephemeral: false
+        content: `✅ **Modo Bypass Activado:** <@${interaction.user.id}> ahora tiene permiso para intervenir y hablar en este ticket.`
       });
     } else {
       return interaction.reply({
         content: `❌ **Modo Bypass Desactivado:** <@${interaction.user.id}> ya no tiene permiso de bypass en este ticket.`,
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
     }
   }

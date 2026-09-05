@@ -39,19 +39,19 @@ module.exports = {
               if (result.error === 'already_has_ticket') {
                 return interaction.reply({
                   content: `Ya tienes un ticket activo en <#${result.channelId}>. Por favor ciérralo antes de iniciar una nueva postulación.`,
-                  ephemeral: true
+                  flags: [MessageFlags.Ephemeral]
                 });
               }
               if (result.error === 'dms_closed') {
                 return interaction.reply({
                   content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a presionar el botón.`,
-                  ephemeral: true
+                  flags: [MessageFlags.Ephemeral]
                 });
               }
             }
             return interaction.reply({
               content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`,
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
@@ -71,7 +71,7 @@ module.exports = {
           if (!session) {
             return interaction.reply({
               content: 'La sesión de postulación ha expirado o no existe. Por favor pulsa de nuevo el botón en el servidor.',
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
@@ -79,7 +79,7 @@ module.exports = {
           if (!targetGuild) {
             return interaction.reply({
               content: 'Error: No se pudo localizar el servidor de Discord.',
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
@@ -124,7 +124,7 @@ module.exports = {
           if (!modal) {
             return interaction.reply({
               content: 'No tienes una postulación activa en curso.',
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
           return await interaction.showModal(modal);
@@ -200,19 +200,19 @@ module.exports = {
               if (result.error === 'already_has_ticket') {
                 return interaction.reply({
                   content: `Ya tienes un ticket activo en <#${result.channelId}>. Por favor ciérralo antes de iniciar una nueva postulación.`,
-                  ephemeral: true
+                  flags: [MessageFlags.Ephemeral]
                 });
               }
               if (result.error === 'dms_closed') {
                 return interaction.reply({
                   content: `**No pudimos enviarte un mensaje directo (DM).**\nPor favor activa la opción **"Permitir mensajes directos de miembros del servidor"** en tus Ajustes de Privacidad de Discord y vuelve a intentarlo.`,
-                  ephemeral: true
+                  flags: [MessageFlags.Ephemeral]
                 });
               }
             }
             return interaction.reply({
               content: `**¡Te hemos enviado las 12 preguntas por mensaje directo (DM)!**\nRevisa tus mensajes privados con el bot para responderlas paso a paso.`,
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
@@ -270,7 +270,7 @@ module.exports = {
           if (!cleanId) {
             return interaction.reply({
               content: 'ID de usuario inválida.',
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
@@ -278,14 +278,14 @@ module.exports = {
           if (!member) {
             return interaction.reply({
               content: `No se pudo encontrar a ningún miembro con ID \`${cleanId}\` en este servidor.`,
-              ephemeral: true
+              flags: [MessageFlags.Ephemeral]
             });
           }
 
           await TicketService.addUser(interaction.channel, member, interaction.user);
           return interaction.reply({
             content: `Usuario <@${member.id}> añadido exitosamente.`,
-            ephemeral: true
+            flags: [MessageFlags.Ephemeral]
           });
         }
       }
@@ -293,7 +293,7 @@ module.exports = {
       console.error('Error al manejar la interacción:', error);
       const errReply = {
         content: 'Hubo un error inesperado al procesar tu solicitud.',
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       };
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(errReply).catch(() => null);
