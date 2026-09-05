@@ -36,9 +36,9 @@ module.exports = {
           if (categoryId === 'postular' && category?.useDmFlow) {
             const result = await DmPostulacionService.start(interaction.user, interaction.guild);
             if (!result.success) {
-              if (result.error === 'already_has_ticket') {
+              if (result.error === 'limit_reached' || result.error === 'already_has_ticket') {
                 return interaction.reply({
-                  content: `Ya tienes un ticket activo en <#${result.channelId}>. Por favor ciérralo antes de iniciar una nueva postulación.`,
+                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`,
                   flags: [MessageFlags.Ephemeral]
                 });
               }
@@ -87,6 +87,14 @@ module.exports = {
 
           const ticketChannel = await TicketService.createPostulacionTicket(interaction.user, targetGuild, session.answers);
           DmPostulacionService.removeSession(interaction.user.id);
+
+          if (ticketChannel?.error) {
+            return interaction.editReply({
+              content: ticketChannel.error,
+              components: [],
+              embeds: []
+            });
+          }
 
           if (ticketChannel) {
             return interaction.editReply({
@@ -197,9 +205,9 @@ module.exports = {
           if (categoryId === 'postular' && category?.useDmFlow) {
             const result = await DmPostulacionService.start(interaction.user, interaction.guild);
             if (!result.success) {
-              if (result.error === 'already_has_ticket') {
+              if (result.error === 'limit_reached' || result.error === 'already_has_ticket') {
                 return interaction.reply({
-                  content: `Ya tienes un ticket activo en <#${result.channelId}>. Por favor ciérralo antes de iniciar una nueva postulación.`,
+                  content: result.reason || `Ya tienes un ticket activo en <#${result.channelId}>.`,
                   flags: [MessageFlags.Ephemeral]
                 });
               }

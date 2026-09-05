@@ -52,6 +52,55 @@ class TicketService {
   }
 
   /**
+   * Valida si el usuario puede abrir un nuevo ticket en la categoría especificada.
+   * Reglas:
+   * 1. Máximo 1 ticket por categoría (no puede repetir la misma categoría).
+   * 2. Máximo 2 tickets abiertos en total entre todas las categorías.
+   * Si detecta canales de tickets que ya fueron eliminados en Discord, los auto-limpia.
+   */
+  static async validateUserTicketLimit(guild, user, categoryId) {
+    const maxTotal = config.ticketSettings?.maxTotalTicketsPerUser || config.ticketSettings?.maxTicketsPerUser || 2;
+    const maxPerCategory = config.ticketSettings?.maxTicketsPerCategory || 1;
+
+    const userTickets = StorageService.getUserActiveTickets(user.id);
+    const validTickets = [];
+
+    // Validar existencia de canales en Discord y limpiar huérfanos
+    for (const t of userTickets) {
+      let channel = guild.channels.cache.get(t.channelId);
+      if (!channel) {
+        channel = await guild.channels.fetch(t.channelId).catch(() => null);
+      }
+      if (channel) {
+        validTickets.push({ ...t, channel });
+      } else {
+        StorageService.removeTicket(t.channelId);
+      }
+    }
+
+    // Regla 1: Máximo 1 ticket de la misma categoría
+    const categoryTickets = validTickets.filter(t => t.categoryId === categoryId);
+    if (categoryTickets.length >= maxPerCategory) {
+      const existing = categoryTickets[0];
+      return {
+        allowed: false,
+        reason: `Ya tienes un ticket abierto de esta categoría en <#${existing.channelId}>. Solo puedes tener 1 ticket por categoría.`
+      };
+    }
+
+    // Regla 2: Máximo 2 tickets en total en el servidor
+    if (validTickets.length >= maxTotal) {
+      const channelsList = validTickets.map(t => `<#${t.channelId}>`).join(' y ');
+      return {
+        allowed: false,
+        reason: `Has alcanzado el límite máximo de ${maxTotal} tickets abiertos simultáneamente (${channelsList}). Debes cerrar al menos uno antes de abrir otro.`
+      };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
    * Crea un canal de ticket para el usuario
    */
   static async createTicket(interaction, categoryId, modalAnswers = null) {
@@ -68,23 +117,13 @@ class TicketService {
       prefix: 'ticket'
     };
 
-    // Verificar si ya tiene un ticket activo
-    const activeTicket = StorageService.getActiveTicketByUser(user.id);
-    if (activeTicket && config.ticketSettings.maxTicketsPerUser > 0) {
-      let existingChannel = guild.channels.cache.get(activeTicket.channelId);
-      if (!existingChannel) {
-        existingChannel = await guild.channels.fetch(activeTicket.channelId).catch(() => null);
-      }
-      if (existingChannel) {
-        const msg = `Ya tienes un ticket abierto actualmente en <#${existingChannel.id}>. Por favor ciérralo antes de abrir uno nuevo.`;
-        if (interaction.deferred) {
-          return await interaction.editReply({ content: msg });
-        } else {
-          return await interaction.reply({ content: msg, flags: [MessageFlags.Ephemeral] });
-        }
+    // 2. Validar límite de tickets por usuario (máximo 2 en total, máximo 1 por categoría)
+    const limitCheck = await this.validateUserTicketLimit(guild, user, categoryId);
+    if (!limitCheck.allowed) {
+      if (interaction.deferred) {
+        return await interaction.editReply({ content: limitCheck.reason });
       } else {
-        // El canal ya no existe en el servidor, limpiar el ticket huérfano
-        StorageService.removeTicket(activeTicket.channelId);
+        return await interaction.reply({ content: limitCheck.reason, flags: [MessageFlags.Ephemeral] });
       }
     }
 
@@ -224,6 +263,11 @@ class TicketService {
    * Crea el ticket a partir de una postulación respondida por DM
    */
   static async createPostulacionTicket(user, guild, answers) {
+    const limitCheck = await this.validateUserTicketLimit(guild, user, 'postular');
+    if (!limitCheck.allowed) {
+      return { error: limitCheck.reason };
+    }
+
     let parentCategory = null;
     const targetParentId = config.categories.postular.parentCategoryId || config.ticketSettings.parentCategoryId;
     if (targetParentId) {

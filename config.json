@@ -217,7 +217,9 @@
       "1378867917487345785"
     ],
     "logsChannelId": "1379662712841306243",
-    "maxTicketsPerUser": 1,
+    "maxTicketsPerUser": 2,
+    "maxTotalTicketsPerUser": 2,
+    "maxTicketsPerCategory": 1,
     "deleteCountdownSeconds": 5,
     "staffMentionMax": 3,
     "staffMentionIntervalMinutes": 30

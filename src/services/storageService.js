@@ -64,6 +64,17 @@ class StorageService {
     return null;
   }
 
+  static getUserActiveTickets(userId) {
+    const data = readData();
+    const tickets = [];
+    for (const [channelId, t] of Object.entries(data.activeTickets)) {
+      if (t.userId === userId) {
+        tickets.push({ channelId, ...t });
+      }
+    }
+    return tickets;
+  }
+
   static updateTicket(channelId, updates) {
     const data = readData();
     if (data.activeTickets[channelId]) {

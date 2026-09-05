@@ -221,22 +221,14 @@ class DmPostulacionService {
    * Inicia el proceso de postulación por DM
    */
   static async start(user, guild) {
-    const activeTicket = StorageService.getActiveTicketByUser(user.id);
-    if (activeTicket) {
-      let existingChannel = guild.channels.cache.get(activeTicket.channelId);
-      if (!existingChannel) {
-        existingChannel = await guild.channels.fetch(activeTicket.channelId).catch(() => null);
-      }
-      if (existingChannel) {
-        return {
-          success: false,
-          error: 'already_has_ticket',
-          channelId: activeTicket.channelId
-        };
-      } else {
-        // El canal ya no existe en el servidor, limpiar el ticket huérfano de la base de datos
-        StorageService.removeTicket(activeTicket.channelId);
-      }
+    const TicketService = require('./ticketService');
+    const limitCheck = await TicketService.validateUserTicketLimit(guild, user, 'postular');
+    if (!limitCheck.allowed) {
+      return {
+        success: false,
+        error: 'limit_reached',
+        reason: limitCheck.reason
+      };
     }
 
     const session = {
