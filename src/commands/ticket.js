@@ -20,17 +20,6 @@ module.exports = {
     )
     .addSubcommand(subcommand =>
       subcommand
-        .setName('rename')
-        .setDescription('Modifica el nombre del canal del ticket actual')
-        .addStringOption(option =>
-          option
-            .setName('nombre')
-            .setDescription('Nuevo nombre para el canal del ticket')
-            .setRequired(true)
-        )
-    )
-    .addSubcommand(subcommand =>
-      subcommand
         .setName('add')
         .setDescription('Añade a un miembro al ticket actual')
         .addUserOption(option =>
@@ -71,63 +60,6 @@ module.exports = {
     if (subcommand === 'close') {
       const reason = interaction.options.getString('motivo') || 'Cerrado mediante comando /ticket close';
       return TicketService.closeTicket(interaction, reason);
-    }
-
-    if (subcommand === 'rename') {
-      const member = interaction.member;
-      const staffRoleId = config.ticketSettings?.staffRoleId;
-      const bypassRoles = config.ticketSettings?.bypassRoleIds || [];
-      const hasRole = (staffRoleId && member?.roles?.cache?.has(staffRoleId)) ||
-                      bypassRoles.some(rId => member?.roles?.cache?.has(rId)) ||
-                      member?.permissions?.has(PermissionFlagsBits.ManageChannels) ||
-                      member?.permissions?.has(PermissionFlagsBits.Administrator);
-
-      if (!hasRole) {
-        return interaction.reply({
-          content: 'No tienes permiso para renombrar este ticket.',
-          flags: [MessageFlags.Ephemeral]
-        });
-      }
-
-      const rawName = interaction.options.getString('nombre').trim();
-      const cleanName = rawName
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-_]/g, '')
-        .slice(0, 95);
-
-      if (!cleanName) {
-        return interaction.reply({
-          content: 'El nombre proporcionado no es válido. Usa letras, números o guiones.',
-          flags: [MessageFlags.Ephemeral]
-        });
-      }
-
-      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
-      try {
-        const oldName = interaction.channel.name;
-        await interaction.channel.setName(cleanName, `Ticket renombrado por ${interaction.user.tag}`);
-
-        const embed = new EmbedBuilder()
-          .setColor(config.panel.accentColor || 0xED4245)
-          .setDescription(`El nombre del ticket ha sido cambiado de \`${oldName}\` a \`${cleanName}\` por <@${interaction.user.id}>.`)
-          .setFooter({ text: 'Este mensaje se eliminará en 6 segundos' });
-
-        const msg = await interaction.channel.send({ embeds: [embed] });
-        setTimeout(() => {
-          msg.delete().catch(() => null);
-        }, 6000);
-
-        return interaction.editReply({
-          content: `Nombre del ticket actualizado exitosamente a \`${cleanName}\`.`
-        });
-      } catch (err) {
-        console.error('Error al renombrar canal de ticket:', err);
-        return interaction.editReply({
-          content: `No se pudo cambiar el nombre del canal: ${err.message || err}`
-        });
-      }
     }
 
     if (subcommand === 'add') {
