@@ -35,19 +35,14 @@ async function deploy(client = null) {
       return;
     }
 
-    console.log(`Iniciando registro de ${commands.length} comandos de barra (/)...`);
-
-    // 1. Registro Global (funciona siempre, sin importar en qué servidor esté el bot)
+    // 1. Limpiar comandos globales para evitar comandos duplicados en la lista de Discord
     try {
-      console.log(`Registrando comandos globalmente para la aplicación (${clientId})...`);
-      await rest.put(
-        Routes.applicationCommands(clientId),
-        { body: commands }
-      );
-      console.log('Comandos globales registrados con éxito.');
-    } catch (err) {
-      console.warn('Aviso en comandos globales:', err.message);
+      await rest.put(Routes.applicationCommands(clientId), { body: [] });
+    } catch (e) {
+      // Silencioso
     }
+
+    console.log(`Iniciando registro de ${commands.length} comandos de barra (/)...`);
 
     // 2. Servidor Principal AntiSocial
     const mainGuildId = (config.guildId || '').trim();
@@ -79,7 +74,7 @@ async function deploy(client = null) {
       }
     }
 
-    console.log('Proceso de registro de comandos finalizado.');
+    console.log('Proceso de registro de comandos finalizado (sin duplicados).');
   } catch (error) {
     console.error('Error durante el registro de comandos:', error);
   }
